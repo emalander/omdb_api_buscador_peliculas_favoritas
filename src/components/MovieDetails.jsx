@@ -10,16 +10,27 @@ import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import {useMovieDetail} from '../features/movies/hooks/useMovies';
 
-const MovieDetails = ({imdbID, open, onClose }) => {
-
+const MovieDetails = ({ imdbID, open, onClose, onToggleFavorite =() => {}, favoriteMovies = [] }) => {
+  
   const { movieDetail, loading, error } = useMovieDetail(imdbID);
 
+  const isFavorite = movieDetail ? favoriteMovies.some(favMovie => favMovie.imdbID === movieDetail.imdbID) : false;
+
+  const handleToggleFavoriteClick = () => {
+    if (movieDetail && onToggleFavorite) { // Aseguramos que movieDetail existe y la prop onToggleFavorite fue pasada
+      onToggleFavorite(movieDetail); // Pasamos el objeto completo de la película
+    }
+  };
+
   return (
-    <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
+    
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ m: 0, p: 2, background: 'linear-gradient(35deg, #94a3b8, #cffafe, #ecfeff, #94a3b8)'}}>
-        {loading ? "Cargando..." : ("Detalles de la película")}
+        {loading ? "Cargando..." : "Detalles de la película"}
         {onClose ? (
           <IconButton
             aria-label="close"
@@ -28,7 +39,7 @@ const MovieDetails = ({imdbID, open, onClose }) => {
               position: 'absolute',
               right: 8,
               top: 8,
-              color: (theme) => theme.palette.grey[500],
+              color: (theme) => theme.palette.grey[800],
             }}
           >
             <CloseIcon />
@@ -59,7 +70,7 @@ const MovieDetails = ({imdbID, open, onClose }) => {
               <Typography variant="h5" component="h2" gutterBottom>
                 <div className="text-center p-2 bg-slate-500 text-white rounded-lg">{movieDetail.Title} ({movieDetail.Year})</div>
               </Typography>
-              
+
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body1" component="span" sx={{ fontWeight: 'bold' }}>
                   Sinopsis:
@@ -95,14 +106,31 @@ const MovieDetails = ({imdbID, open, onClose }) => {
               {movieDetail.imdbRating && movieDetail.imdbRating !== 'N/A' && (
                 <Box sx={{ display: 'flex', alignItems: 'baseline'}}>
                   <Typography variant="body1" component="span" sx={{ fontWeight: 'bold' }}>
-                    IMDb Rating: 
+                    IMDb Rating:
                   </Typography>
                   <Typography variant="body1" component="span" className="p-1">
                     {movieDetail.imdbRating} ({movieDetail.imdbVotes} votos)
                   </Typography>
                 </Box>
               )}
-              
+              {favoriteMovies.length > 0 && (
+                <Button
+                  variant="contained"
+                  onClick={handleToggleFavoriteClick}
+                  startIcon={isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                  sx={{
+                    mt: 2,
+                    backgroundColor: isFavorite ? 'rgb(220 38 38)' : 'rgb(100 116 139)', // Rojo si es favorito, gris si no
+                    '&:hover': {
+                      backgroundColor: isFavorite ? 'rgb(185 28 28)' : 'rgb(71 85 105)',
+                    },
+                    textTransform: 'none',
+                  }}
+                >
+                  {isFavorite ? 'Quitar de Favoritos' : 'Añadir a Favoritos'}
+                </Button>
+              )}
+
             </Box>
           </Box>
         )}
@@ -114,7 +142,7 @@ const MovieDetails = ({imdbID, open, onClose }) => {
           backgroundColor: 'rgb(100 116 139)',
           color: 'white',
           borderRadius: '0.25rem',
-          '&:hover': { 
+          '&:hover': {
             backgroundColor: 'rgb(71 85 105)',
           },
           textTransform: 'none',
@@ -124,4 +152,4 @@ const MovieDetails = ({imdbID, open, onClose }) => {
   );
 }
 
-export default MovieDetails
+export default MovieDetails;

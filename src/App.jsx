@@ -8,6 +8,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import {useMovieSearch} from './features/movies/hooks/useMovies';
 import MovieCard from './components/MovieCard';
 import MovieDetails from './components/MovieDetails';
+import MovieFavoriteTable  from './components/MovieFavoriteTable';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
@@ -24,24 +25,50 @@ function App() {
   const [inputValue, setInputValue] = useState(''); 
   const [page, setPage] = useState(1);
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [openFavoriteListDialog, setOpenFavoriteListDialog] = useState(false);
   const [imdbIDMovie, setImdbIDMovie] = useState('');
   const [movieArrayList, setMovieArrayList] = useState([]);
   const { movies, loading, error, totalResults } = useMovieSearch(searchTerm, page);
 
   const totalPages = Math.ceil(totalResults / 10);
 
-  const handleToggleFavorite = (imdbId) => {
+  const handleToggleFavorite = (movieData) => {
     
-    console.log(imdbId)
-    if (movieArrayList.includes(imdbId)) {
+    if (!movieData || !movieData.imdbID) {
+      console.error("handleToggleFavorite: movieData o imdbID es indefinido.", movieData);
+      return;
+    }
+
+    if (movieArrayList.some(movie => movie.imdbID === movieData.imdbID)) {
       
-      setMovieArrayList(prevList => prevList.filter(id => id !== imdbId));
-      console.log(`Eliminado: ${imdbId}`);
+      setMovieArrayList(prevList => prevList.filter(movie => movie.imdbID !== movieData.imdbID));
+      console.log(`Eliminado de favoritos: ${movieData.Title || movieData.imdbID}`);
     } else {
-      setMovieArrayList(prevList => [...prevList, imdbId]);
-      console.log(`Añadido: ${imdbId}`);
+
+      setMovieArrayList(prevList => [...prevList, movieData]);
+      console.log(`Añadido a favoritos: ${movieData.Title || movieData.imdbID}`);
     }
   };
+  
+  useEffect(() => {
+    
+    const storedFavorites = localStorage.getItem('favoriteMoviesData');
+    if (storedFavorites) {
+      try {
+        setMovieArrayList(JSON.parse(storedFavorites));
+      } catch (e) {
+        console.error("Error al parsear favoritos de localStorage:", e);
+        localStorage.removeItem('favoriteMoviesData');
+      }
+    }
+  }, [openFavoriteListDialog]);
+
+  useEffect(() => {
+    
+    localStorage.setItem('favoriteMoviesData', JSON.stringify(movieArrayList));
+    console.log("App.jsx: movieArrayList actualizado y guardado:", movieArrayList);
+
+  }, [movieArrayList]);
   
   const handleInputChange = (event, newInputValue, reason) => {
     
@@ -74,9 +101,16 @@ function App() {
     setOpenDetailDialog(true)
     setImdbIDMovie(imdbID)
   }
+  const handleShowFavorites= () => {
+    
+    setOpenFavoriteListDialog(true)
+  }
 
   const handleCloseDetail =() => {
     setOpenDetailDialog(false)
+  }
+  const handleCloseFavorites =() => {
+    setOpenFavoriteListDialog(false)
   }
 
   return (
@@ -122,7 +156,6 @@ function App() {
               InputProps={{
                  startAdornment: (
                    <InputAdornment position="start" sx={{gap:4}}>
-                     
                     <Chip
                       variant="outlined"
                       label={
@@ -144,6 +177,7 @@ function App() {
                             <IconButton 
                               size="lg"
                               sx={{ p: 0 }}
+                              onClick={handleShowFavorites}
                             >
                               <VisibilityIcon sx={{ fontSize: '1.2rem', ml: 0.5 }} />
                             </IconButton>
@@ -189,6 +223,7 @@ function App() {
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
           {movies.map((movie) => {
+            
             if(movie.Poster === 'N/A' || movie.Type !== "movie") {
               return null;
             } return (
@@ -196,20 +231,29 @@ function App() {
                 key={movie.imdbID}
                 title={movie.Title}
                 year={movie.Year}
-                poster={movie.Poster} //!== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450?text=No+Poster'}
+                poster={movie.Poster}
                 imdbId={movie.imdbID}
                 showDetail={handleShowDetail}
-                onToggleFavorite={handleToggleFavorite}
-                isFavorite={movieArrayList.includes(movie.imdbID)}
+                onToggleFavorite={() => handleToggleFavorite(movie)}
+                isFavorite={movieArrayList.some(favMovie => favMovie.imdbID === movie.imdbID)}
               />
             )
           })}
         </div>
       </Container>
       {openDetailDialog && 
-        <MovieDetails imdbID={imdbIDMovie} onClose={handleCloseDetail}/>
+        <MovieDetails imdbID={imdbIDMovie}
+          open={openDetailDialog}
+          onClose={handleCloseDetail}
+          onToggleFavorite={handleToggleFavorite}
+          favoriteMovies={movieArrayList}
+        />
       }
-      
+      {openFavoriteListDialog && 
+        <MovieFavoriteTable
+          onClose={handleCloseFavorites}
+        />
+      }
     </>
   )
 }

@@ -8,8 +8,10 @@ import StarIcon from '@mui/icons-material/Star';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { IconButton } from '@mui/material';
+import { useState, useEffect } from 'react';
 
 const MovieCard = ({ title, year, poster, imdbId, showDetail, onToggleFavorite, isFavorite  }) => {
+
 
   const handleIconDetailClick = () => {
     if (showDetail) {
@@ -22,8 +24,9 @@ const MovieCard = ({ title, year, poster, imdbId, showDetail, onToggleFavorite, 
   }
 
   const handleIconLikeClick = (imdbId) => {
-    console.log("elegir");
+    
     onToggleFavorite(imdbId);
+    
   };
   return (
     <Box 

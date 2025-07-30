@@ -4,19 +4,18 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import NotInterestedIcon from '@mui/icons-material/NotInterested';
-import Chip from '@mui/material/Chip';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import {useMovieDetail} from '../features/movies/hooks/useMovies';
 import Table from '@mui/material/Table';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import TableBody from '@mui/material/TableBody';
+import MovieDetails from './MovieDetails';
 import TableContainer from '@mui/material/TableContainer';
 import Paper from '@mui/material/Paper';
 import { useEffect, useState } from 'react';
@@ -25,6 +24,8 @@ import { useEffect, useState } from 'react';
 const MovieFavoriteTable = ({open, onClose }) => {
 
   const [arrayMoviesFromLocalStorage, setArrayMoviesFromLocalStorage] = useState([])
+  const [showDetailFavoriteMovie, setShowDetailFavoriteMovie] = useState(false)
+  const [movieFavoriteSelected, setMovieFavoriteSelected] = useState('')
 
   useEffect( () => {
     try {
@@ -60,6 +61,21 @@ const MovieFavoriteTable = ({open, onClose }) => {
     console.log('movieArrayList actualizado y guardado:', arrayMoviesFromLocalStorage);
     console.log(`Película con ID ${imdbIDToRemove} eliminada.`);
   };
+
+  const handleFavoriteMovie = (movieFavorite) => {
+
+    console.log("handleFavoriteMovie")
+    
+    setShowDetailFavoriteMovie(true)
+    setMovieFavoriteSelected(movieFavorite)
+
+    console.log(movieFavorite)
+  }
+
+  const handleCloseDetailFavorite = () => {
+    console.log("handleCloseDetailFavorite")
+    setShowDetailFavoriteMovie(false)
+  }
 
   return (
     <>
@@ -106,6 +122,13 @@ const MovieFavoriteTable = ({open, onClose }) => {
                         >
                           <NotInterestedIcon />
                         </IconButton>
+                        <IconButton
+                          variant="outlined"
+                          onClick={() => handleFavoriteMovie(movie)}
+                          
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
                       </TableCell>
                     </TableRow>
                   ))
@@ -134,6 +157,14 @@ const MovieFavoriteTable = ({open, onClose }) => {
           }}>Cerrar</Button>
         </DialogActions>
       </Dialog>
+       {showDetailFavoriteMovie && 
+      
+        <MovieDetails imdbID={movieFavoriteSelected.imdbID }
+          open={true}
+          onClose={handleCloseDetailFavorite}
+        />
+      }
+      
     </>
   );
 }
